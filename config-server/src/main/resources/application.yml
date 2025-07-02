@@ -1,0 +1,20 @@
+server:
+  port: 8888
+
+spring:
+  application:
+    name: config-server
+  cloud:
+    config:
+      server:
+        git:
+#          uri: https://github.com/<your-org>/bytebites-configs
+          uri: config-server/src/main/java/org/sikawofie/configserver/config_files
+          default-label: main
+          clone-on-start: true
+          skip-ssl-validation: true
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
