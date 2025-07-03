@@ -1,23 +1,17 @@
 package org.sikawofie.restaurantservice.service;
 
 
-import org.sikawofie.restaurantservice.entity.MenuItem;
-import org.sikawofie.restaurantservice.entity.Restaurant;
+import org.sikawofie.restaurantservice.dto.*;
 
 import java.util.List;
 
-
 public interface RestaurantService {
 
+    RestaurantResponseDto createRestaurant(RestaurantRequestDto restaurant, Long ownerId, String role);
 
+    List<RestaurantResponseDto> getAll();
 
-    Restaurant createRestaurant(Restaurant restaurant, Long ownerId);
+    List<MenuItemResponseDto> getMenu(Long restaurantId);
 
-    List<Restaurant> getAll();
-
-    List<MenuItem> getMenu(Long restaurantId);
-
-    MenuItem addMenuItem(Long restaurantId, MenuItem item, Long ownerId);
-
-
+    MenuItemResponseDto addMenuItem(Long restaurantId, MenuItemRequestDto item, Long ownerId, String role);
 }
