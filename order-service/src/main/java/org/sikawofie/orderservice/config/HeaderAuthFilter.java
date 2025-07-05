@@ -36,6 +36,7 @@ public class HeaderAuthFilter extends OncePerRequestFilter {
                 List<SimpleGrantedAuthority> authorities = Arrays.stream(userRolesHeader.split(","))
                         .map(String::trim)
                         .filter(role -> !role.isEmpty())
+                        .map(role -> role.startsWith("ROLE_") ? role : "ROLE_" + role) // Ensure role prefix
                         .map(SimpleGrantedAuthority::new)
                         .collect(Collectors.toList());
 
@@ -44,7 +45,7 @@ public class HeaderAuthFilter extends OncePerRequestFilter {
 
                 SecurityContextHolder.getContext().setAuthentication(authentication);
 
-                logger.info("Authenticated user [id={}, email={}] with roles: {}", parsedUserId, email != null ? email : "N/A", userRolesHeader);
+                logger.info("Authenticated user [id={}, email={}] with roles: {}", parsedUserId, email != null ? email : "N/A", authorities);
 
             } catch (NumberFormatException e) {
                 logger.warn("Failed to parse 'X-User-Id' header. Received invalid numeric value: '{}'", userId);

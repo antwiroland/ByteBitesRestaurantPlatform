@@ -8,21 +8,27 @@ import org.sikawofie.authservice.enums.Role;
 import org.sikawofie.authservice.repository.UserRepository;
 import org.sikawofie.authservice.service.AuthService;
 import org.sikawofie.authservice.utils.JwtUtils;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
 
 @Service
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    private  final JwtUtils jwtUtils;
+    private final JwtUtils jwtUtils;
 
+    @Override
     public User register(RegisterRequest request) {
         if (userRepository.findByEmail(request.getEmail()).isPresent()) {
-            throw new RuntimeException("Email already registered");
+            throw new DataIntegrityViolationException("Email already registered");
+        }
+
+        if (userRepository.findByUsername(request.getUsername()).isPresent()) {
+            throw new DataIntegrityViolationException("Username already taken");
         }
 
         User user = new User();
@@ -34,15 +40,19 @@ public class AuthServiceImpl implements AuthService {
         return userRepository.save(user);
     }
 
+    @Override
     public String login(LoginRequest request) {
         User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+                .orElseThrow(() -> new BadCredentialsException("Invalid credentials"));
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-            throw new BadCredentialsException("Invalid password");
+            throw new BadCredentialsException("Invalid credentials");
         }
 
-        return jwtUtils.generateToken(user.getUsername());
+        return jwtUtils.generateToken(
+                user.getUsername(),
+                user.getRole().name(),
+                user.getEmail()
+        );
     }
-
 }
