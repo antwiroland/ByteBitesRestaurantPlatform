@@ -44,12 +44,18 @@ public class JwtAuthenticationFilter implements GatewayFilter {
                     .parseClaimsJws(token)
                     .getBody();
 
-            String userId = claims.getSubject();
+            Long userId = claims.get("userId", Long.class);
+            String username = claims.getSubject();
             String role = claims.get("role", String.class);
             String email = claims.get("email", String.class);
 
+            if (userId == null) {
+                return onError(exchange, "User ID missing in token", HttpStatus.UNAUTHORIZED);
+            }
+
             ServerHttpRequest modifiedRequest = exchange.getRequest().mutate()
-                    .header("X-User-Id", userId)
+                    .header("X-User-Id", userId.toString())
+                    .header("X-User-Name", username)
                     .header("X-User-Role", role != null ? role : "USER")
                     .header("X-User-Email", email != null ? email : "")
                     .build();

@@ -25,7 +25,7 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public OrderResponseDto placeOrder(OrderRequestDto request, Long customerId, String role) {
-        if (!"ROLE_CUSTOMER".equals(role)) {
+        if (!"CUSTOMER".equals(role)) {
             throw new AccessDeniedException("Only customers can place orders.");
         }
 

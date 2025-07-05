@@ -28,8 +28,9 @@ public class JwtUtils {
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
-    public String generateToken(String username, String role, String email) {
+    public String generateToken(Long userId,String username, String role, String email) {
         Map<String, Object> claims = new HashMap<>();
+        claims.put("userId", userId);
         claims.put("role", role);
         claims.put("email", email);
 

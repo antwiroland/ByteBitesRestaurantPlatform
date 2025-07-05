@@ -50,6 +50,7 @@ public class AuthServiceImpl implements AuthService {
         }
 
         return jwtUtils.generateToken(
+                user.getId(),
                 user.getUsername(),
                 user.getRole().name(),
                 user.getEmail()
