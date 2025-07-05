@@ -112,8 +112,8 @@ public class RestaurantController {
         return buildResponse(HttpStatus.OK, "Search by address results", service.searchRestaurantsByAddress(address));
     }
 
-    @GetMapping("/cb")
-    public ResponseEntity<ApiResponse<List<RestaurantDTO>>> getWithCircuitBreaker() {
-        return buildResponse(HttpStatus.OK, "Restaurants with circuit breaker", service.getRestaurantsWithCircuitBreaker());
-    }
+//    @GetMapping("/cb")
+//    public ResponseEntity<ApiResponse<List<RestaurantDTO>>> getWithCircuitBreaker() {
+//        return buildResponse(HttpStatus.OK, "Restaurants with circuit breaker", service.getRestaurantsWithCircuitBreaker());
+//    }
 }
