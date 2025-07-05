@@ -8,7 +8,7 @@ import org.sikawofie.restaurantservice.service.RestaurantService;
 import org.sikawofie.restaurantservice.utils.SecurityUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.http.server.ServerHttpRequest;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -32,12 +32,12 @@ public class RestaurantController {
     }
 
     @PostMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'OWNER')")
     public ResponseEntity<ApiResponse<RestaurantResponseDto>> create(
-            @RequestBody @Valid RestaurantRequestDto dto,
-            ServerHttpRequest request
+            @RequestBody @Valid RestaurantRequestDto dto
     ) {
-        Long ownerId = SecurityUtils.getCurrentUserId(request);
-        String role = SecurityUtils.getCurrentUserRole(request);
+        Long ownerId = SecurityUtils.getUserId();
+        String role = SecurityUtils.getUserRole();
 
         RestaurantResponseDto created = service.createRestaurant(dto, ownerId, role);
         return buildResponse(HttpStatus.CREATED, "Restaurant created successfully", created);
@@ -54,30 +54,31 @@ public class RestaurantController {
     }
 
     @PostMapping("/{id}/menu")
+    @PreAuthorize("hasRole('ADMIN') or (hasRole('OWNER') and @restaurantService.isOwner(#id, authentication.principal.userId))")
     public ResponseEntity<ApiResponse<MenuItemResponseDto>> addMenuItem(
             @PathVariable Long id,
-            @RequestBody @Valid MenuItemRequestDto item,
-            ServerHttpRequest request
+            @RequestBody @Valid MenuItemRequestDto item
     ) {
-        Long ownerId = SecurityUtils.getCurrentUserId(request);
-        String role = SecurityUtils.getCurrentUserRole(request);
+        Long ownerId = SecurityUtils.getUserId();
+        String role = SecurityUtils.getUserRole();
 
         MenuItemResponseDto added = service.addMenuItem(id, item, ownerId, role);
         return buildResponse(HttpStatus.OK, "Menu item added", added);
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN') or (hasRole('OWNER') and @restaurantService.isOwner(#id, authentication.principal.userId))")
     public ResponseEntity<ApiResponse<RestaurantResponseDto>> updateRestaurant(
             @PathVariable Long id,
-            @RequestBody @Valid RestaurantRequestDto dto,
-            ServerHttpRequest request
+            @RequestBody @Valid RestaurantRequestDto dto
     ) {
-        Long ownerId = SecurityUtils.getCurrentUserId(request);
+        Long ownerId = SecurityUtils.getUserId();
         RestaurantResponseDto updated = service.updateRestaurant(id, dto, ownerId);
         return buildResponse(HttpStatus.OK, "Restaurant updated", updated);
     }
 
     @PatchMapping("/{id}/status")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<RestaurantDTO>> updateStatus(
             @PathVariable Long id,
             @RequestParam RestaurantStatus status
@@ -97,8 +98,9 @@ public class RestaurantController {
     }
 
     @GetMapping("/owner")
-    public ResponseEntity<ApiResponse<List<RestaurantDTO>>> getByOwner(ServerHttpRequest request) {
-        Long ownerId = SecurityUtils.getCurrentUserId(request);
+    @PreAuthorize("hasAnyRole('ADMIN', 'OWNER')")
+    public ResponseEntity<ApiResponse<List<RestaurantDTO>>> getByOwner() {
+        Long ownerId = SecurityUtils.getUserId();
         return buildResponse(HttpStatus.OK, "Owner's restaurants retrieved", service.getRestaurantsByOwner(ownerId));
     }
 
@@ -111,9 +113,4 @@ public class RestaurantController {
     public ResponseEntity<ApiResponse<List<RestaurantDTO>>> searchByAddress(@RequestParam String address) {
         return buildResponse(HttpStatus.OK, "Search by address results", service.searchRestaurantsByAddress(address));
     }
-
-//    @GetMapping("/cb")
-//    public ResponseEntity<ApiResponse<List<RestaurantDTO>>> getWithCircuitBreaker() {
-//        return buildResponse(HttpStatus.OK, "Restaurants with circuit breaker", service.getRestaurantsWithCircuitBreaker());
-//    }
 }

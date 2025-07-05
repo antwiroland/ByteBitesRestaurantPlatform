@@ -34,7 +34,7 @@ public class RestaurantServiceImpl implements RestaurantService {
 
     @Override
     public RestaurantResponseDto createRestaurant(RestaurantRequestDto dto, Long ownerId, String role) {
-        if (!"ROLE_RESTAURANT_OWNER".equals(role)) {
+        if (!"RESTAURANT_OWNER".equals(role)) {
             throw new AccessDeniedException("Only restaurant owners can create restaurants.");
         }
         Restaurant restaurant = requestMapper.toDTO(dto);
@@ -60,7 +60,7 @@ public class RestaurantServiceImpl implements RestaurantService {
 
     @Override
     public MenuItemResponseDto addMenuItem(Long restaurantId, MenuItemRequestDto dto, Long ownerId, String role) {
-        if (!"ROLE_RESTAURANT_OWNER".equals(role)) {
+        if (!"RESTAURANT_OWNER".equals(role)) {
             throw new AccessDeniedException("Unauthorized to add menu items.");
         }
 
