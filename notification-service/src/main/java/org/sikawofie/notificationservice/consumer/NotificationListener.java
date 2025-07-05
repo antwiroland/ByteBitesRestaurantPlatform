@@ -1,20 +1,25 @@
 package org.sikawofie.notificationservice.consumer;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.sikawofie.notificationservice.event.OrderPlacedEvent;
+import org.sikawofie.notificationservice.service.EmailService;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 
 @Service
+@RequiredArgsConstructor
 @Slf4j
 public class NotificationListener {
 
+    private final EmailService emailService;
+
     @KafkaListener(topics = "order-placed-topic", groupId = "notification-group", containerFactory = "kafkaListenerContainerFactory")
-    public void handleOrderPlaced(OrderPlacedEvent event) {
-        log.info("🔔 Sending notification: Order #{} placed by customer {} for restaurant {}",
-                event.getOrderId(), event.getCustomerId(), event.getRestaurantId());
+    public void onOrderPlaced(OrderPlacedEvent event) {
+        log.info("📥 Received order event: {}", event);
 
+        String recipient = "rolandantwisenior47@gmail.com";
 
-        System.out.println("Email sent to restaurant/customer for Order #" + event.getOrderId());
+        emailService.sendOrderNotification(event, recipient);
     }
 }
