@@ -1,4 +1,4 @@
-package org.sikawofie.notificationservice.dto;
+package org.sikawofie.notificationservice.event;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
