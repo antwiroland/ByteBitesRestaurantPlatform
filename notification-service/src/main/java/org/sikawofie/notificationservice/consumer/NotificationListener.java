@@ -3,7 +3,6 @@ package org.sikawofie.notificationservice.consumer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.sikawofie.notificationservice.event.OrderPlacedEvent;
-//import org.sikawofie.notificationservice.service.EmailService;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 
@@ -12,14 +11,10 @@ import org.springframework.stereotype.Service;
 @Slf4j
 public class NotificationListener {
 
-//    private final EmailService emailService;
-
-    @KafkaListener(topics = "order-placed-topic", groupId = "notification-group", containerFactory = "kafkaListenerContainerFactory")
+    @KafkaListener(topics = "order-placed-topic", containerFactory = "kafkaListenerContainerFactory")
     public void onOrderPlaced(OrderPlacedEvent event) {
-        log.info("📥 Received order event: {}", event);
-
-        String recipient = "rolandantwisenior47@gmail.com";
-
-//        emailService.sendOrderNotification(event, recipient);
+        log.info("📥 Received order event: Order ID={}, Customer ID={}, Status={}",
+                event.getOrderId(), event.getCustomerId(), event.getStatus());
+        // emailService.sendOrderNotification(event, event.getEmail());
     }
 }

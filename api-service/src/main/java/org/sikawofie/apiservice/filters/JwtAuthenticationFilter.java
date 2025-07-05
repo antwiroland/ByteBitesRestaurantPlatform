@@ -2,6 +2,7 @@ package org.sikawofie.apiservice.filters;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.gateway.filter.GatewayFilter;
@@ -14,14 +15,17 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
-import java.nio.charset.StandardCharsets;
 import java.security.Key;
 
 @Component
 public class JwtAuthenticationFilter implements GatewayFilter {
 
-//    @Value("${jwt.secret}")
-    String jwtSecret ="pX6r4kz3e2l9f5aD1cB8v7gN0jM5qW2yL4iH9oP3uK6tF1xZ0=";
+    private final Key signingKey;
+
+    public JwtAuthenticationFilter(@Value("${jwt.secret:pX6r4kz3e2l9f5aD1cB8v7gN0jM5qW2yL4iH9oP3uK6tF1xZ0}") String jwtSecret) {
+        byte[] decodedKey = Decoders.BASE64URL.decode(jwtSecret);
+        this.signingKey = Keys.hmacShaKeyFor(decodedKey);
+    }
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
@@ -32,35 +36,42 @@ public class JwtAuthenticationFilter implements GatewayFilter {
         }
 
         try {
-            String token = authHeader.substring(7); // Remove "Bearer "
-            Key key = Keys.hmacShaKeyFor(jwtSecret.getBytes());
+            String token = authHeader.substring(7);
 
             Claims claims = Jwts.parserBuilder()
-                    .setSigningKey(key)
+                    .setSigningKey(signingKey)
                     .build()
                     .parseClaimsJws(token)
                     .getBody();
 
-            String userId = claims.getSubject();
+            Long userId = claims.get("userId", Long.class);
+            String username = claims.getSubject();
             String role = claims.get("role", String.class);
+            String email = claims.get("email", String.class);
+
+            if (userId == null) {
+                return onError(exchange, "User ID missing in token", HttpStatus.UNAUTHORIZED);
+            }
 
             ServerHttpRequest modifiedRequest = exchange.getRequest().mutate()
-                    .header("X-User-Id", userId)
+                    .header("X-User-Id", userId.toString())
+                    .header("X-User-Name", username)
                     .header("X-User-Role", role != null ? role : "USER")
+                    .header("X-User-Email", email != null ? email : "")
                     .build();
 
             return chain.filter(exchange.mutate().request(modifiedRequest).build());
 
         } catch (Exception e) {
-            return onError(exchange, "Invalid JWT: " + e.getMessage(), HttpStatus.UNAUTHORIZED);
+            return onError(exchange, "JWT verification failed: " + e.getMessage(), HttpStatus.UNAUTHORIZED);
         }
     }
 
     private Mono<Void> onError(ServerWebExchange exchange, String message, HttpStatus status) {
         exchange.getResponse().setStatusCode(status);
-        byte[] bytes = message.getBytes(StandardCharsets.UTF_8);
-        DataBuffer buffer = exchange.getResponse().bufferFactory().wrap(bytes);
         exchange.getResponse().getHeaders().add(HttpHeaders.CONTENT_TYPE, "text/plain");
+        byte[] bytes = message.getBytes(java.nio.charset.StandardCharsets.UTF_8);
+        DataBuffer buffer = exchange.getResponse().bufferFactory().wrap(bytes);
         return exchange.getResponse().writeWith(Mono.just(buffer));
     }
 }

@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/restaurants")
+@RequestMapping("/api/restaurant/")
 @RequiredArgsConstructor
 public class RestaurantController {
 

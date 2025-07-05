@@ -4,6 +4,7 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.sikawofie.orderservice.security.AuthUser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -25,34 +26,44 @@ public class HeaderAuthFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull FilterChain filterChain)
             throws ServletException, IOException {
 
-        String userId = request.getHeader("X-User-Id");
+        String userIdHeader = request.getHeader("X-User-Id");
+        String username = request.getHeader("X-User-Name");
         String userRolesHeader = request.getHeader("X-User-Role");
         String email = request.getHeader("X-User-Email");
 
-        if (userId != null && !userId.isEmpty() && userRolesHeader != null && !userRolesHeader.isEmpty()) {
+        if (userIdHeader != null && !userIdHeader.isEmpty() && userRolesHeader != null && !userRolesHeader.isEmpty()) {
             try {
-                Long parsedUserId = Long.parseLong(userId);
+                Long userId = Long.parseLong(userIdHeader);
 
                 List<SimpleGrantedAuthority> authorities = Arrays.stream(userRolesHeader.split(","))
                         .map(String::trim)
                         .filter(role -> !role.isEmpty())
+                        .map(role -> role.startsWith("ROLE_") ? role : "ROLE_" + role)
                         .map(SimpleGrantedAuthority::new)
                         .collect(Collectors.toList());
 
                 UsernamePasswordAuthenticationToken authentication =
-                        new UsernamePasswordAuthenticationToken(parsedUserId, null, authorities);
+                        new UsernamePasswordAuthenticationToken(username, null, authorities);
+
+                // Store additional user details
+                authentication.setDetails(new AuthUser(userId, email));
 
                 SecurityContextHolder.getContext().setAuthentication(authentication);
 
-                logger.info("Authenticated user [id={}, email={}] with roles: {}", parsedUserId, email != null ? email : "N/A", userRolesHeader);
+                logger.info("Authenticated user [id={}, name={}] with roles: {}",
+                        userId, username, authorities);
 
             } catch (NumberFormatException e) {
-                logger.warn("Failed to parse 'X-User-Id' header. Received invalid numeric value: '{}'", userId);
+                logger.warn("Failed to parse 'X-User-Id' header. Received value: '{}'", userIdHeader);
+                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid user ID format");
+                return;
             } catch (Exception e) {
-                logger.error("Unexpected error during header-based authentication: {}", e.getMessage(), e);
+                logger.error("Unexpected error during authentication: {}", e.getMessage(), e);
+                response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Internal server error");
+                return;
             }
         } else {
-            logger.debug("Missing required authentication headers: 'X-User-Id' or 'X-User-Role'. Skipping authentication context setup.");
+            logger.debug("Missing required authentication headers");
         }
 
         filterChain.doFilter(request, response);

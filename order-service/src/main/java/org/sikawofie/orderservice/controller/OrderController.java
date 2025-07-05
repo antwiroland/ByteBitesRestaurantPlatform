@@ -1,6 +1,5 @@
 package org.sikawofie.orderservice.controller;
 
-
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.sikawofie.orderservice.Utils.SecurityUtils;
@@ -10,14 +9,13 @@ import org.sikawofie.orderservice.dto.OrderResponseDto;
 import org.sikawofie.orderservice.service.OrderService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.http.server.ServerHttpRequest;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/orders")
+@RequestMapping("/api/order/")
 @RequiredArgsConstructor
 public class OrderController {
 
@@ -25,11 +23,10 @@ public class OrderController {
 
     @PostMapping
     public ResponseEntity<ApiResponse<OrderResponseDto>> placeOrder(
-            @RequestBody @Valid OrderRequestDto request,
-            ServerHttpRequest httpRequest) {
+            @RequestBody @Valid OrderRequestDto request) {
 
-        Long customerId = SecurityUtils.getUserId(httpRequest);
-        String role = SecurityUtils.getUserRole(httpRequest);
+        Long customerId = SecurityUtils.getUserId();
+        String role = SecurityUtils.getUserRole();
 
         OrderResponseDto order = orderService.placeOrder(request, customerId, role);
 
@@ -43,8 +40,8 @@ public class OrderController {
     }
 
     @GetMapping
-    public ResponseEntity<ApiResponse<List<OrderResponseDto>>> customerOrders(ServerHttpRequest request) {
-        Long customerId = SecurityUtils.getUserId(request);
+    public ResponseEntity<ApiResponse<List<OrderResponseDto>>> customerOrders() {
+        Long customerId = SecurityUtils.getUserId();
         List<OrderResponseDto> orders = orderService.getOrdersByCustomer(customerId);
 
         return ResponseEntity.ok(ApiResponse.<List<OrderResponseDto>>builder()
@@ -57,11 +54,10 @@ public class OrderController {
 
     @GetMapping("/restaurant/{id}")
     public ResponseEntity<ApiResponse<List<OrderResponseDto>>> ordersForRestaurant(
-            @PathVariable Long id,
-            ServerHttpRequest request) {
+            @PathVariable Long id) {
 
-        Long userId = SecurityUtils.getUserId(request);
-        String role = SecurityUtils.getUserRole(request);
+        Long userId = SecurityUtils.getUserId();
+        String role = SecurityUtils.getUserRole();
 
         List<OrderResponseDto> orders = orderService.getOrdersByRestaurant(id, userId, role);
 
@@ -72,6 +68,4 @@ public class OrderController {
                 .timestamp(LocalDateTime.now())
                 .build());
     }
-
 }
-
