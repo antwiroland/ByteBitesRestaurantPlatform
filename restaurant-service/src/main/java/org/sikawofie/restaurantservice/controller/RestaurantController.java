@@ -8,6 +8,7 @@ import org.sikawofie.restaurantservice.service.RestaurantService;
 import org.sikawofie.restaurantservice.utils.SecurityUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -31,6 +32,7 @@ public class RestaurantController {
     }
 
     @PostMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'OWNER')")
     public ResponseEntity<ApiResponse<RestaurantResponseDto>> create(
             @RequestBody @Valid RestaurantRequestDto dto
     ) {
@@ -52,6 +54,7 @@ public class RestaurantController {
     }
 
     @PostMapping("/{id}/menu")
+    @PreAuthorize("hasRole('ADMIN') or (hasRole('OWNER') and @restaurantService.isOwner(#id, authentication.principal.userId))")
     public ResponseEntity<ApiResponse<MenuItemResponseDto>> addMenuItem(
             @PathVariable Long id,
             @RequestBody @Valid MenuItemRequestDto item
@@ -64,6 +67,7 @@ public class RestaurantController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN') or (hasRole('OWNER') and @restaurantService.isOwner(#id, authentication.principal.userId))")
     public ResponseEntity<ApiResponse<RestaurantResponseDto>> updateRestaurant(
             @PathVariable Long id,
             @RequestBody @Valid RestaurantRequestDto dto
@@ -74,6 +78,7 @@ public class RestaurantController {
     }
 
     @PatchMapping("/{id}/status")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<RestaurantDTO>> updateStatus(
             @PathVariable Long id,
             @RequestParam RestaurantStatus status
@@ -93,6 +98,7 @@ public class RestaurantController {
     }
 
     @GetMapping("/owner")
+    @PreAuthorize("hasAnyRole('ADMIN', 'OWNER')")
     public ResponseEntity<ApiResponse<List<RestaurantDTO>>> getByOwner() {
         Long ownerId = SecurityUtils.getUserId();
         return buildResponse(HttpStatus.OK, "Owner's restaurants retrieved", service.getRestaurantsByOwner(ownerId));
