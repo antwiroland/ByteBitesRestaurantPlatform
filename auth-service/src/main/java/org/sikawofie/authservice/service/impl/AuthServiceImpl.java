@@ -1,7 +1,5 @@
 package org.sikawofie.authservice.service.impl;
 
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.security.Keys;
 import lombok.RequiredArgsConstructor;
 import org.sikawofie.authservice.dto.LoginRequest;
 import org.sikawofie.authservice.dto.RegisterRequest;

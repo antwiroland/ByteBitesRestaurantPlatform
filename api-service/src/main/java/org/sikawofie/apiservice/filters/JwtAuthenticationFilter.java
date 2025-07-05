@@ -20,8 +20,8 @@ import java.security.Key;
 @Component
 public class JwtAuthenticationFilter implements GatewayFilter {
 
-    @Value("${jwt.secret}")
-    String jwtSecret;
+//    @Value("${jwt.secret}")
+    String jwtSecret ="pX6r4kz3e2l9f5aD1cB8v7gN0jM5qW2yL4iH9oP3uK6tF1xZ0=";
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {

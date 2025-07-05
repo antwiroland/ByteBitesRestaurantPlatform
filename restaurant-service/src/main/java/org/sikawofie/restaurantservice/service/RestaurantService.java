@@ -30,5 +30,5 @@ public interface RestaurantService {
     List<RestaurantDTO> searchRestaurantsByAddress(String address);
 
 
-    List<RestaurantDTO> getRestaurantsWithCircuitBreaker();
+//    List<RestaurantDTO> getRestaurantsWithCircuitBreaker();
 }

@@ -1,6 +1,6 @@
 package org.sikawofie.restaurantservice.service.impl;
 
-import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+//import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -151,11 +151,11 @@ public class RestaurantServiceImpl implements RestaurantService {
                 .collect(Collectors.toList());
     }
 
-    @Override
-    @CircuitBreaker(name = "restaurant-service", fallbackMethod = "fallbackGetAllRestaurants")
-    public List<RestaurantDTO> getRestaurantsWithCircuitBreaker() {
-        return getAllActiveRestaurants();
-    }
+//    @Override
+//    @CircuitBreaker(name = "restaurant-service", fallbackMethod = "fallbackGetAllRestaurants")
+//    public List<RestaurantDTO> getRestaurantsWithCircuitBreaker() {
+//        return getAllActiveRestaurants();
+//    }
 
     // Circuit breaker fallback
     public List<RestaurantDTO> fallbackGetAllRestaurants(Exception ex) {
