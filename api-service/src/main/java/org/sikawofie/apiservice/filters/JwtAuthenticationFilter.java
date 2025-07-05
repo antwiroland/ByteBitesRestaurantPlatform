@@ -3,6 +3,7 @@ package org.sikawofie.apiservice.filters;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.gateway.filter.GatewayFilter;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.core.io.buffer.DataBuffer;
@@ -14,42 +15,44 @@ import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
 import java.nio.charset.StandardCharsets;
-
+import java.security.Key;
 
 @Component
 public class JwtAuthenticationFilter implements GatewayFilter {
 
-    private final String jwtSecret = "your_jwt_secret";
+    @Value("${jwt.secret}")
+    String jwtSecret;
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
-        ServerHttpRequest request = exchange.getRequest();
-        String authHeader = request.getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
+        String authHeader = exchange.getRequest().getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
 
-        if(authHeader == null || !authHeader.startsWith("Bearer ")) {
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             return onError(exchange, "Missing or invalid Authorization header", HttpStatus.UNAUTHORIZED);
         }
 
+        try {
+            String token = authHeader.substring(7); // Remove "Bearer "
+            Key key = Keys.hmacShaKeyFor(jwtSecret.getBytes());
 
-        try{
             Claims claims = Jwts.parserBuilder()
-                    .setSigningKey(Keys.hmacShaKeyFor(jwtSecret.getBytes()))
+                    .setSigningKey(key)
                     .build()
-                    .parseClaimsJws(authHeader)
+                    .parseClaimsJws(token)
                     .getBody();
 
             String userId = claims.getSubject();
             String role = claims.get("role", String.class);
 
-            ServerHttpRequest modifiedRequest = request.mutate()
+            ServerHttpRequest modifiedRequest = exchange.getRequest().mutate()
                     .header("X-User-Id", userId)
-                    .header("X-User-Role", role)
+                    .header("X-User-Role", role != null ? role : "USER")
                     .build();
 
             return chain.filter(exchange.mutate().request(modifiedRequest).build());
 
         } catch (Exception e) {
-            return onError(exchange,"Invalid JWT: " + e.getMessage(), HttpStatus.UNAUTHORIZED);
+            return onError(exchange, "Invalid JWT: " + e.getMessage(), HttpStatus.UNAUTHORIZED);
         }
     }
 
@@ -60,6 +63,4 @@ public class JwtAuthenticationFilter implements GatewayFilter {
         exchange.getResponse().getHeaders().add(HttpHeaders.CONTENT_TYPE, "text/plain");
         return exchange.getResponse().writeWith(Mono.just(buffer));
     }
-
-
 }

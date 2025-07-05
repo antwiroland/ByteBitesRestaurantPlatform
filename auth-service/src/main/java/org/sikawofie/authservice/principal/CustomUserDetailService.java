@@ -1,7 +1,6 @@
-package org.sikawofie.authservice.config;
+package org.sikawofie.authservice.principal;
 
 import org.sikawofie.authservice.entity.User;
-import org.sikawofie.authservice.principal.UserPrincipal;
 import org.sikawofie.authservice.repository.UserRepository;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
