@@ -51,7 +51,7 @@ Auth Service | Restaurant Service | Order Service | Notification Service
 ## 🧭 Architecture Diagrams
 
 ### Security Flow
-![Security Diagram](docs/security-flow.svg)
+![Security Diagram](doc/security-flow.svg)
 
 ### JWT Token flow
 ![Jwt Token Diagram](doc/token-flow.svg)
@@ -60,7 +60,7 @@ Auth Service | Restaurant Service | Order Service | Notification Service
 ![Kafka Diagram](doc/kafka-flow.svg)
 
 ###  Overall microservices interaction
-![microservices interaction Diagram](docs/system-flow.svg)
+![microservices interaction Diagram](doc/system-flow.svg)
 
 ---
 
