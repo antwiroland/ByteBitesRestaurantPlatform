@@ -46,6 +46,24 @@ Auth Service | Restaurant Service | Order Service | Notification Service
 
 ---
 
+---
+
+## 🧭 Architecture Diagrams
+
+### Security Flow
+![Security Diagram](docs/security-flow.svg)
+
+### JWT Token flow
+![Jwt Token Diagram](doc/token-flow.svg)
+
+### Kafka pub/sub flow
+![Kafka Diagram](doc/kafka-flow.svg)
+
+###  Overall microservices interaction
+![microservices interaction Diagram](docs/system-flow.svg)
+
+---
+
 ## ⚙️ Prerequisites
 
 - Java 17+
@@ -279,15 +297,7 @@ Enable Spring Boot Actuator in each service:
 | `/actuator/metrics`             | Application metrics                |
 | `/actuator/httptrace`           | HTTP request traces                |
 
----
 
-## 🧭 Architecture Diagrams
-
-- `docs/security-flow.svg`: JWT token validation
-- `docs/kafka-flow.svg`: Kafka pub/sub flow
-- `docs/system-flow.svg`: Overall microservices interaction
-
----
 
 ## 🧰 Troubleshooting
 
