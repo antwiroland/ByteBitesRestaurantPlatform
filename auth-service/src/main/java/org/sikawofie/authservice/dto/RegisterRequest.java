@@ -7,6 +7,9 @@ import lombok.Data;
 
 @Data
 public class RegisterRequest {
+    @NotBlank
+    @Size(min = 3)
+    private String username;
     @NotBlank @Email
     private String email;
     @NotBlank
