@@ -15,6 +15,6 @@ public class NotificationListener {
     public void onOrderPlaced(OrderPlacedEvent event) {
         log.info("📥 Received order event: Order ID={}, Customer ID={}, Status={}",
                 event.getOrderId(), event.getCustomerId(), event.getStatus());
-        // emailService.sendOrderNotification(event, event.getEmail());
+//         emailService.sendOrderNotification(event, event.getEmail());
     }
 }

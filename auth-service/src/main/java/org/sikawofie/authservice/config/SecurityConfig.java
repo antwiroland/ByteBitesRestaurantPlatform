@@ -29,6 +29,12 @@ public class SecurityConfig {
                 .sessionManagement(manager -> manager.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(request -> request
                         .requestMatchers("/auth/**").permitAll()
+                                .requestMatchers(
+                                        "/actuator/health",
+                                        "/actuator/metrics",
+                                        "/actuator/heapdump",
+                                        "/actuator/prometheus"
+                                ).permitAll()
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
                         .anyRequest().authenticated())
                 .addFilterBefore(headerBasedAuthFilter(), BasicAuthenticationFilter.class);
