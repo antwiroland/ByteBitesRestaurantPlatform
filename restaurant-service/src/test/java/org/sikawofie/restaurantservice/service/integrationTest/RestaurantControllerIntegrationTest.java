@@ -255,7 +255,7 @@ class RestaurantControllerIntegrationTest {
                 .price(12.99)
                 .build();
 
-        when(securityUtils.getUserId()).thenReturn(2L); // Different owner
+        when(securityUtils.getUserId()).thenReturn(2L);
 
         mockMvc.perform(post("/api/restaurant/{id}/menu", testRestaurant.getId())
                         .with(csrf())
