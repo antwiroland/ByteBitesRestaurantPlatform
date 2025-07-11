@@ -4,18 +4,21 @@ import org.sikawofie.restaurantservice.security.AuthUser;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Component;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Component
 public class SecurityUtils {
 
-    public static Long getUserId() {
-        return getAuthUser() != null ? getAuthUser().getUserId() : null;
+    public Long getUserId() {
+        AuthUser authUser = getAuthUser();
+        return authUser != null ? authUser.getUserId() : null;
     }
 
-    public static String getUsername() {
+    public String getUsername() {
         SecurityContext context = SecurityContextHolder.getContext();
         if (context != null && context.getAuthentication() != null) {
             Object principal = context.getAuthentication().getPrincipal();
@@ -26,17 +29,16 @@ public class SecurityUtils {
         return null;
     }
 
-    public static String getUserEmail() {
-        return getAuthUser() != null ? getAuthUser().getEmail() : null;
+    public String getUserEmail() {
+        AuthUser authUser = getAuthUser();
+        return authUser != null ? authUser.getEmail() : null;
     }
 
-    // New method to get user role
-    public static String getUserRole() {
+    public String getUserRole() {
         SecurityContext context = SecurityContextHolder.getContext();
         if (context != null && context.getAuthentication() != null) {
             List<GrantedAuthority> authorities = (List<GrantedAuthority>) context.getAuthentication().getAuthorities();
             if (!authorities.isEmpty()) {
-                // Return the first role (without ROLE_ prefix)
                 String role = authorities.get(0).getAuthority();
                 return role.startsWith("ROLE_") ? role.substring(5) : role;
             }
@@ -44,7 +46,7 @@ public class SecurityUtils {
         return null;
     }
 
-    public static List<String> getUserRoles() {
+    public List<String> getUserRoles() {
         SecurityContext context = SecurityContextHolder.getContext();
         if (context != null && context.getAuthentication() != null) {
             return context.getAuthentication().getAuthorities().stream()
@@ -55,7 +57,7 @@ public class SecurityUtils {
         return Collections.emptyList();
     }
 
-    private static AuthUser getAuthUser() {
+    private AuthUser getAuthUser() {
         SecurityContext context = SecurityContextHolder.getContext();
         if (context != null && context.getAuthentication() != null) {
             Object details = context.getAuthentication().getDetails();

@@ -33,7 +33,7 @@ import java.util.List;
 public class RestaurantController {
 
     private final RestaurantService service;
-
+    private final SecurityUtils securityUtils;
     private <T> ResponseEntity<org.sikawofie.restaurantservice.dto.ApiResponse<T>> buildResponse(HttpStatus status, String message, T data) {
         return ResponseEntity.status(status)
                 .body(org.sikawofie.restaurantservice.dto.ApiResponse.<T>builder()
@@ -105,8 +105,8 @@ public class RestaurantController {
     public ResponseEntity<org.sikawofie.restaurantservice.dto.ApiResponse<RestaurantResponseDto>> create(
             @RequestBody @Valid RestaurantRequestDto dto
     ) {
-        Long ownerId = SecurityUtils.getUserId();
-        String role = SecurityUtils.getUserRole();
+        Long ownerId = securityUtils.getUserId();
+        String role = securityUtils.getUserRole();
 
         RestaurantResponseDto created = service.createRestaurant(dto, ownerId, role);
         return buildResponse(HttpStatus.CREATED, "Restaurant created successfully", created);
@@ -273,8 +273,8 @@ public class RestaurantController {
             @PathVariable Long id,
             @RequestBody @Valid MenuItemRequestDto item
     ) {
-        Long ownerId = SecurityUtils.getUserId();
-        String role = SecurityUtils.getUserRole();
+        Long ownerId = securityUtils.getUserId();
+        String role = securityUtils.getUserRole();
 
         MenuItemResponseDto added = service.addMenuItem(id, item, ownerId, role);
         return buildResponse(HttpStatus.OK, "Menu item added", added);
@@ -349,7 +349,7 @@ public class RestaurantController {
             @PathVariable Long id,
             @RequestBody @Valid RestaurantRequestDto dto
     ) {
-        Long ownerId = SecurityUtils.getUserId();
+        Long ownerId = securityUtils.getUserId();
         RestaurantResponseDto updated = service.updateRestaurant(id, dto, ownerId);
         return buildResponse(HttpStatus.OK, "Restaurant updated", updated);
     }
@@ -548,7 +548,7 @@ public class RestaurantController {
             )
     })
     public ResponseEntity<org.sikawofie.restaurantservice.dto.ApiResponse<List<RestaurantDTO>>> getByOwner() {
-        Long ownerId = SecurityUtils.getUserId();
+        Long ownerId = securityUtils.getUserId();
         return buildResponse(HttpStatus.OK, "Owner's restaurants retrieved", service.getRestaurantsByOwner(ownerId));
     }
 
