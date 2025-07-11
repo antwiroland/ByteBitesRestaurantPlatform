@@ -1,6 +1,5 @@
 package org.sikawofie.restaurantservice.service.impl;
 
-//import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -34,40 +33,58 @@ public class RestaurantServiceImpl implements RestaurantService {
 
     @Override
     public RestaurantResponseDto createRestaurant(RestaurantRequestDto dto, Long ownerId, String role) {
+        log.info("Creating restaurant for ownerId={} with role={}", ownerId, role);
         if (!"OWNER".equals(role)) {
+            log.warn("Access denied: role '{}' cannot create restaurant", role);
             throw new AccessDeniedException("Only restaurant owners can create restaurants.");
         }
+
         Restaurant restaurant = requestMapper.toDTO(dto);
         restaurant.setOwnerId(ownerId);
         restaurant.setStatus(RestaurantStatus.PENDING);
         Restaurant saved = restaurantRepository.save(restaurant);
+        log.info("Restaurant '{}' created with ID {}", saved.getName(), saved.getId());
+
         return mapToResponseDto(saved);
     }
 
     @Override
     public List<RestaurantResponseDto> getAll() {
-        return restaurantRepository.findAll().stream()
+        log.info("Fetching all restaurants");
+        List<RestaurantResponseDto> list = restaurantRepository.findAll().stream()
                 .map(this::mapToResponseDto)
                 .collect(Collectors.toList());
+        log.debug("Found {} restaurants", list.size());
+        return list;
     }
 
     @Override
     public List<MenuItemResponseDto> getMenu(Long restaurantId) {
-        return menuItemRepository.findByRestaurantId(restaurantId).stream()
+        log.info("Fetching menu for restaurant ID {}", restaurantId);
+        List<MenuItemResponseDto> list = menuItemRepository.findByRestaurantId(restaurantId).stream()
                 .map(this::mapMenuItemToDto)
                 .collect(Collectors.toList());
+        log.debug("Found {} menu items", list.size());
+        return list;
     }
 
     @Override
     public MenuItemResponseDto addMenuItem(Long restaurantId, MenuItemRequestDto dto, Long ownerId, String role) {
+        log.info("Adding menu item to restaurantId={} by ownerId={} with role={}", restaurantId, ownerId, role);
+
         if (!"OWNER".equals(role)) {
+            log.warn("Access denied: role '{}' cannot add menu items", role);
             throw new AccessDeniedException("Unauthorized to add menu items.");
         }
 
         Restaurant restaurant = restaurantRepository.findById(restaurantId)
-                .orElseThrow(() -> new ResourceNotFoundException("Restaurant not found."));
+                .orElseThrow(() -> {
+                    log.warn("Restaurant with ID {} not found", restaurantId);
+                    return new ResourceNotFoundException("Restaurant not found.");
+                });
 
         if (!restaurant.getOwnerId().equals(ownerId)) {
+            log.warn("Unauthorized access: user {} does not own restaurant {}", ownerId, restaurantId);
             throw new AccessDeniedException("You do not own this restaurant.");
         }
 
@@ -78,22 +95,31 @@ public class RestaurantServiceImpl implements RestaurantService {
                 .restaurant(restaurant)
                 .build();
 
-        return mapMenuItemToDto(menuItemRepository.save(item));
+        MenuItem savedItem = menuItemRepository.save(item);
+        log.info("Menu item '{}' added to restaurant {}", savedItem.getName(), restaurantId);
+        return mapMenuItemToDto(savedItem);
     }
 
     @Override
     @Transactional
     public RestaurantResponseDto updateRestaurant(Long id, RestaurantRequestDto request, Long ownerId) {
+        log.info("Updating restaurant ID={} by owner ID={}", id, ownerId);
+
         Restaurant restaurant = restaurantRepository.findByIdAndOwnerId(id, ownerId)
-                .orElseThrow(() -> new UnauthorizedException("Not authorized to update this restaurant."));
+                .orElseThrow(() -> {
+                    log.warn("Unauthorized update attempt on restaurant ID={} by user ID={}", id, ownerId);
+                    return new UnauthorizedException("Not authorized to update this restaurant.");
+                });
 
         if (!restaurant.getEmail().equals(request.getEmail()) &&
                 restaurantRepository.existsByEmail(request.getEmail())) {
+            log.warn("Email '{}' already in use", request.getEmail());
             throw new BusinessException("Email already in use.");
         }
 
         if (!restaurant.getPhoneNumber().equals(request.getPhoneNumber()) &&
                 restaurantRepository.existsByPhoneNumber(request.getPhoneNumber())) {
+            log.warn("Phone number '{}' already in use", request.getPhoneNumber());
             throw new BusinessException("Phone number already in use.");
         }
 
@@ -104,34 +130,51 @@ public class RestaurantServiceImpl implements RestaurantService {
         restaurant.setPhoneNumber(request.getPhoneNumber());
         restaurant.setImageUrl(request.getImageUrl());
 
-        return mapToResponseDto(restaurantRepository.save(restaurant));
+        Restaurant updated = restaurantRepository.save(restaurant);
+        log.info("Restaurant ID={} updated successfully", updated.getId());
+
+        return mapToResponseDto(updated);
     }
 
     @Override
     public RestaurantDTO updateRestaurantStatus(Long id, RestaurantStatus status) {
+        log.info("Updating status of restaurant ID={} to {}", id, status);
         Restaurant restaurant = restaurantRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Restaurant not found with ID: " + id));
+                .orElseThrow(() -> {
+                    log.warn("Restaurant not found with ID {}", id);
+                    return new ResourceNotFoundException("Restaurant not found with ID: " + id);
+                });
         restaurant.setStatus(status);
-        return restaurantMapper.toDTO(restaurantRepository.save(restaurant));
+        Restaurant updated = restaurantRepository.save(restaurant);
+        log.info("Status of restaurant ID={} updated to {}", id, status);
+        return restaurantMapper.toDTO(updated);
     }
 
     @Override
     public List<RestaurantDTO> getAllActiveRestaurants() {
-        return restaurantRepository.findByStatus(RestaurantStatus.ACTIVE).stream()
+        log.info("Fetching all active restaurants");
+        List<RestaurantDTO> list = restaurantRepository.findByStatus(RestaurantStatus.ACTIVE).stream()
                 .map(restaurantMapper::toDTO)
                 .collect(Collectors.toList());
+        log.debug("Found {} active restaurants", list.size());
+        return list;
     }
 
     @Override
     public RestaurantDTO getRestaurantById(Long id) {
+        log.info("Fetching restaurant by ID {}", id);
         return restaurantMapper.toDTO(
                 restaurantRepository.findById(id)
-                        .orElseThrow(() -> new ResourceNotFoundException("Restaurant not found."))
+                        .orElseThrow(() -> {
+                            log.warn("Restaurant with ID {} not found", id);
+                            return new ResourceNotFoundException("Restaurant not found.");
+                        })
         );
     }
 
     @Override
     public List<RestaurantDTO> getRestaurantsByOwner(Long ownerId) {
+        log.info("Fetching restaurants by owner ID {}", ownerId);
         return restaurantRepository.findByOwnerId(ownerId).stream()
                 .map(restaurantMapper::toDTO)
                 .collect(Collectors.toList());
@@ -139,6 +182,7 @@ public class RestaurantServiceImpl implements RestaurantService {
 
     @Override
     public List<RestaurantDTO> searchRestaurantsByName(String name) {
+        log.info("Searching restaurants by name: {}", name);
         return restaurantRepository.findByNameContainingIgnoreCase(name).stream()
                 .map(restaurantMapper::toDTO)
                 .collect(Collectors.toList());
@@ -146,24 +190,17 @@ public class RestaurantServiceImpl implements RestaurantService {
 
     @Override
     public List<RestaurantDTO> searchRestaurantsByAddress(String address) {
+        log.info("Searching restaurants by address: {}", address);
         return restaurantRepository.findByLocationContainingIgnoreCase(address).stream()
                 .map(restaurantMapper::toDTO)
                 .collect(Collectors.toList());
     }
 
-//    @Override
-//    @CircuitBreaker(name = "restaurant-service", fallbackMethod = "fallbackGetAllRestaurants")
-//    public List<RestaurantDTO> getRestaurantsWithCircuitBreaker() {
-//        return getAllActiveRestaurants();
-//    }
-
-    // Circuit breaker fallback
     public List<RestaurantDTO> fallbackGetAllRestaurants(Exception ex) {
-        log.warn("Circuit breaker triggered: {}", ex.getMessage());
+        log.warn("Circuit breaker fallback triggered due to: {}", ex.getMessage());
         return List.of();
     }
 
-    // Helper DTO mappings
     private RestaurantResponseDto mapToResponseDto(Restaurant restaurant) {
         return RestaurantResponseDto.builder()
                 .id(restaurant.getId())
