@@ -1,4 +1,4 @@
-package org.sikawofie.restaurantservice.service;
+package org.sikawofie.restaurantservice.service.unitTest;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -15,11 +15,6 @@ import org.sikawofie.restaurantservice.repository.RestaurantRepository;
 import org.sikawofie.restaurantservice.service.impl.RestaurantServiceImpl;
 import org.springframework.security.access.AccessDeniedException;
 
-import java.math.BigDecimal;
-import java.util.*;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;import java.math.BigDecimal;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
